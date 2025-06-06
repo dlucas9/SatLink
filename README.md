@@ -2,29 +2,17 @@
 
 <img src="pics/LogoSatLink225_225_white.png" alt="logo" width="150"/>
 
-SatLink is a python based application that runs speciffic satellite downlink calcullations. It has a GUI and his main functions are:
+SatLink is a python based application that runs specific satellite downlink calculations. Its main functions are:
 
-  - Atmospheric attenuation calcullation (via [itur])
-  - Single and multi-point downlink avaiability calcullation (input and output csv file)
-  - Antenna size estimation for a desired availability (single point graphic plot and multi point csv output)
+  - Atmospheric attenuation calculation (via [itur])
+  - Single and multi-point downlink availability calculation (input and output csv file)
+  - Antenna size estimation for a desired availability (single point analysis and multi point csv output)
   - Save and load parameters for satellites, ground stations and reception characteristics
   - Totally free !!!
 
-This project is a attempt to simplify satellite's link budget calcullations and to create a tool for teaching purposes. Please check the [**documentation**](https://cfragoas.github.io/SatLink/) for more detailed information.
+This project is an attempt to simplify satellite's link budget calculations and to create a tool for teaching purposes. Please check the [**documentation**](https://cfragoas.github.io/SatLink/) for more detailed information.
 
-# GUI Interface
-For those that dont like code writing
-
-<img src="https://i.imgur.com/ZMpcxgH.png" alt="screenshot" width="500"/>
-
-  - Simple Qt Gui made for simple usage
-  - Drop lists can be edited via model folder
-
-To run the calcullations via GUI interface, run the python file **main_window.py**. The main window will appear. Now, just choose the functions in the action menu
-
-Detailed information about the usage of the GUI can be found in the [**documentation**](https://cfragoas.github.io/SatLink/).
-
-A Satlink web app implementation can be used by building a dockerfile using [**this**](https://github.com/cfragoas/SatLink/blob/main/Dockerfile) and runing **satlink_web.py** (needs to install [**streamlit**](https://streamlit.io/) package to work)
+A Satlink web app implementation can be used by building a dockerfile using [**this**](https://github.com/cfragoas/SatLink/blob/main/Dockerfile) and running **satlink_web.py** (needs to install [**streamlit**](https://streamlit.io/) package to work)
 
 # Using SatLink via python commands 
  SatLink consists of three main classes 
@@ -98,16 +86,11 @@ pip install tqdm==4.66.5
 pip install pandas==2.2.3
 pip install pathos==0.3.3
 pip install astropy==6.1.4
-pip install pyqt5==5.15.2
 pip install matplotlib==3.9.2
 pip install chardet==5.2.0
 ```
 
-Run **main_window.py** to start the applicaiton via interface.
-
-For Linux users getting a ```QStandardPaths: wrong permissions on runtime directory /run/user/1000/``` warning, enter the ```sudo chmod 0700 /run/user/1000/``` command in your terminal.
-
-For Linux users using a Conda environment that might be getting a ```libGL error: MESA-LOADER: failed to open swrast``` error, try installing gcc with the ```conda install gcc``` command.
+To use SatLink, import the required classes and run the example files. Check the example files like `single_point_example.py` and `multi_point_example.py` for usage instructions.
 
 ### Contributions
 

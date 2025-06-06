@@ -5,51 +5,51 @@ from sat import satellite
 from GrStat import ground_station
 
 
-# VARIÁVEIS DE ENTRADA
+# INPUT VARIABLES
 
 site_lat = -3.7
 site_long = -45.9
 sat_long = -70
 f = 3.5
 tau = 90 #H=0, V = 90, circ = 45
-hS = 0.447 #altura da estação terrena
+hS = 0.447 #ground station height
 ant_diam = 1.2
 p = 0.01
 
 station = ground_station(site_lat, site_long, ant_diam)
-# primeiro passo - determinar R0,01
+# first step - determine R0,01
 
 R001 = station.get_R001()
 
-# segundo passo - calcular a altura efetiva da chuva hR
+# second step - calculate the effective rain height hR
 
 hR = station.get_hR()
 
-# terceiro passo - calcular o percurso inclinado na chuva LS
-# hs - altura da estação terrena
-# E - angulo de elevação
+# third step - calculate the slant path in rain LS
+# hs - ground station height
+# E - elevation angle
 
 sat = satellite(sat_long, f)
 E = sat.get_elevation(site_lat, site_long)
 LS = (hR - hS) / np.sin(np.radians(E))
 
-# quarto passo - calcular a projeção no plano horizontal (LG) do percurso inclinado
+# fourth step - calculate the horizontal projection (LG) of the slant path
 
 LG = LS * np.cos(np.radians(E))
 
-# quinto passo - calular a atenuação específica gamaR
-# isto é feito através da classe specific_attenuation (ref. ITU P.838-3)
+# fifth step - calculate the specific attenuation gamaR
+# this is done through the specific_attenuation class (ref. ITU P.838-3)
 
 gamaR = specific_attenuation().get_gamaR(R001, f, E, tau)
 
-# sexto passo - calcular o fator de redução horizontal r001
+# sixth step - calculate the horizontal reduction factor r001
 
 r001 = (1 + 0.078 * np.sqrt(LG * gamaR / f) - 0.38 * (1 - np.exp(-2 * LG))) ** (-1)
 
-# sétimo passo - calcular o fator de ajuste vertical v001
-# para se obter o v001, é necessário calcular outras variáveis - zeta, LR e chi
+# seventh step - calculate the vertical adjustment factor v001
+# to obtain v001, it is necessary to calculate other variables - zeta, LR and chi
 
-# zeta (graus)
+# zeta (degrees)
 zeta = np.tan(np.radians((hR - hS) / (LG * r001))) ** (-1)
 
 # LR (km)
@@ -66,18 +66,18 @@ else:
 v001 = (1 + np.sqrt(np.sin(np.radians(E))) * (
             31 * (1 - np.exp(-E / (1 + chi))) * (np.sqrt(LR * gamaR) / f ** 2) - 0.45)) ** (-1)
 
-# oitavo passo - calcular a distância LE do percurso (km)
+# eighth step - calculate the path distance LE (km)
 
 LE = LR * v001
 
-# nono passo - finalmente, a atenuação excedida para 0,01% da média anual A001
+# ninth step - finally, the attenuation exceeded for 0.01% of the annual average A001
 
 A001 = gamaR * LE
 
-# CONVERSÃO PARA OUTROS VALORES DO PROBABILIDADE p DA CHUVA ALÉM DE 0,01% (menor que 5%)
+# CONVERSION TO OTHER RAIN PROBABILITY VALUES p BEYOND 0.01% (less than 5%)
 
 if p > 0.0001:
-    # determinação de beta
+    # determination of beta
 
     if p >= 0.01 or abs(site_lat) > 36:
         beta = 0
@@ -86,7 +86,7 @@ if p > 0.0001:
     else:
         beta = -0.005 * (abs(site_lat) - 36) + 1.8 - 4.25 * np.sin(np.radians(E))
 
-    # convertendo o balor de A001 para o valor Ap de um p diferente
+    # converting the A001 value to the Ap value for a different p
 
     Ap = A001 * (p / 0.01) ** -(0.655 + 0.033 * ln(p) - 0.045 * ln(A001) - beta * (1 - p) * np.sin(np.radians(E)))
 

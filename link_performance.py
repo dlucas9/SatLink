@@ -47,26 +47,22 @@ def sp_link_performance():  # this function runs the availability for a single p
     line = data.loc[(data.Modcod) == modcod]
     # tech = line['Tech'].values[0]
     mod = line['Modulation'].values[0]
-    fec = line['FEC'].values[0]
-
-    # criando o objeto satélite
+    fec = line['FEC'].values[0]    # creating the satellite object
     satelite = Satellite(sat_long, freq, max_eirp, sat_height, max_bw, bw_util, 0, 0, mod, roll_off, fec)
 
-    # atribuindo uma estação terrena à um satélite
+    # assigning a ground station to a satellite
     satelite.set_grstation(station)
 
     ##############################
     ### reception parametters ####
-    ##############################
+    ##############################    polarization_loss = 3  # polarization loss, in dB
 
-    polarization_loss = 3  # perda de polarização, em dB
-
-    # criando o objeto receptor
+    # creating the receiver object
     reception = Reception(ant_size, ant_eff, coupling_loss, polarization_loss, lnb_gain, lnb_temp, cable_loss,
                           max_depoint)
 
-    # atribuindo uma recepção à um enlace de satélite
-    satelite.set_reception(reception)  # setando o receptor do link de satélite
+    # assigning a reception to a satellite link
+    satelite.set_reception(reception)  # setting the link receiver
 
     ###################################
     #########     OUTPUTS     #########

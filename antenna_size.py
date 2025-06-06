@@ -67,26 +67,22 @@ def sp_ant_size():  # this function runs the availability for a single point and
     line = data.loc[(data.Modcod) == modcod]
     # tech = line['Tech'].values[0]
     mod = line['Modulation'].values[0]
-    fec = line['FEC'].values[0]
-
-    # criando o objeto satélite
+    fec = line['FEC'].values[0]    # creating the satellite object
     satellite = Satellite(sat_long, freq, max_eirp, sat_height, max_bw, bw_util, 0, 0, mod, roll_off, fec)
 
-    # atribuindo uma estação terrena à um satélite
+    # assigning a ground station to a satellite
     satellite.set_grstation(station)
 
     ##############################
     ### reception parametters ####
-    ##############################
+    ##############################    polarization_loss = 3  # polarization loss, in dB
 
-    polarization_loss = 3  # perda de polarização, em dB
-
-    # criando o objeto receptor
+    # creating the receiver object
     reception = Reception(None, ant_eff, aditional_losses, polarization_loss, lnb_gain, lnb_temp, cable_loss,
                           max_depoint)
 
-    # atribuindo uma recepção à um enlace de satélite
-    satellite.set_reception(reception)  # setando o receptor do link de satélite
+    # assigning a reception to a satellite link
+    satellite.set_reception(reception)  # setting the link receiver
 
     ###################################
     #########     OUTPUTS     #########

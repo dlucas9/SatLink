@@ -23,7 +23,7 @@ class Satellite:
         self.b_transp = b_transp  # transponder's band, in GHz
         self.b_util = b_util  # transponder's band that the carrier is using, in GHz
         self.back_off = back_off  # transponder's back off ????????????????
-        self.contorno = contorno  # ver que diabos é isso aqui ????????????????
+        self.contorno = contorno  # what the heck is this ????????????????
         # self.tech = tech  # technology (DVB-S, S2, S2X)
         self.modulation = modulation  # modulation name
         self.fec = fec  # FEC

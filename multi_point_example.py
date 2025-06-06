@@ -49,7 +49,7 @@ if __name__ == '__main__':
     coupling_loss = 0  # [dB]
     polarization_loss = 3  # [dB]
     lnb_gain = 55  # [dB]
-    lnb_noise_temp = 20  # temperatura de ruído do LNBF
+    lnb_noise_temp = 20  # LNBF noise temperature
     cable_loss = 4  # [dB]
     max_depoint = 0.1  # maximum depointing angle [degrees]
 

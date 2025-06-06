@@ -5,8 +5,8 @@ from models import util
 import sys
 
 
-# retorna parâmetros tabelados referenciados as coordenadas da estação terrena
-# lat/long em formato de graus
+# returns tabulated parameters referenced to the ground station coordinates
+# lat/long in degrees format
 
 class GroundStation:
 
@@ -14,7 +14,7 @@ class GroundStation:
         self.site_lat = site_lat
         self.site_long = site_long
 
-        # variáveis calculadas internamente na classe
+        # variables calculated internally in the class
 
     def get_earth_radius(self):
         a = 6378137  # m
@@ -25,61 +25,59 @@ class GroundStation:
         return radius
 
     def getnearpos(self, array, value):
-        # função para buscar os índices mais próximos dos valores amostrados nas tabelas (h0 e R001)
+        # function to find the closest indices of sampled values in tables (h0 and R001)
         idx = (np.abs(array - value)).argmin()
         return idx
 
     def get_R001(self):
-        # função que retorna o valor de R001 dadas as coordenadas da estação terrena (ref. ITU 837-7)
-        # R001 - taxa de precipitação da chuva excedida em 0.01% do ano
+        # function that returns the R001 value given the ground station coordinates (ref. ITU 837-7)
+        # R001 - rainfall rate exceeded 0.01% of the year
 
-        R001_table = pd.read_csv('R001.csv', sep=';', index_col=0)  # linha=lat, coluna=long
+        R001_table = pd.read_csv('R001.csv', sep=';', index_col=0)  # row=lat, column=long
+        rows_R001 = R001_table.index.to_numpy()
+        columns_R001 = R001_table.columns.to_numpy().astype('int32')
 
-        linhas_R001 = R001_table.index.to_numpy()
-        colunas_R001 = R001_table.columns.to_numpy().astype('int32')
-
-        R001 = (R001_table.iloc[self.getnearpos(linhas_R001, self.site_lat * 1000), self.getnearpos(colunas_R001,
+        R001 = (R001_table.iloc[self.getnearpos(rows_R001, self.site_lat * 1000), self.getnearpos(columns_R001,
                                                                                                     self.site_long * 1000)]) / 1000
-        # tem que dividir por mil pelo formato que os dados da planilha são formatados (sem casa decimais)
+        # must divide by thousand due to the format that spreadsheet data is formatted (no decimal places)
 
         return R001
 
     def get_h0(self):
-        # função que retorna o valor de h0 dadas as coordenadas da estação terrena (ref. ITU 839-4)
-        # h0 - altura isotérmica sobre o nível do mar
+        # function that returns the h0 value given the ground station coordinates (ref. ITU 839-4)
+        # h0 - isothermal height above sea level
 
-        h0_table = pd.read_csv('h0.csv', sep=';', index_col=0)  # linha=lat, coluna=long
+        h0_table = pd.read_csv('h0.csv', sep=';', index_col=0)  # row=lat, column=long
 
-        linhas_h0 = h0_table.index.to_numpy()
-        colunas_h0 = h0_table.columns.to_numpy().astype('int32')
+        rows_h0 = h0_table.index.to_numpy()
+        columns_h0 = h0_table.columns.to_numpy().astype('int32')
 
         h0 = h0_table.iloc[
-            self.getnearpos(linhas_h0, self.site_lat * 1000), self.getnearpos(colunas_h0, self.site_long * 1000)]
+            self.getnearpos(rows_h0, self.site_lat * 1000), self.getnearpos(columns_h0, self.site_long * 1000)]
 
         return h0
 
     def get_hR(self):
-        # função que retorna o valor de hR dadas as coordenadas da estação terrena (ref. ITU 839-4)
-        # hR - altura média anual da chuva sobre o nível do mar
+        # function that returns the hR value given the ground station coordinates (ref. ITU 839-4)
+        # hR - mean annual rain height above sea level
         hR = self.get_h0() + 0.36
         return hR
 
 
-class Reception:
-
+class Reception:    
     def __init__(self, ant_size=1.2, ant_eff=0.6, coupling_loss=0.5, polarization_loss=3, lnb_gain = 60, lnb_noise_temp=20,
                  cable_loss=5, max_depoint = 0):
 
         self.ant_size = ant_size
         self.ant_eff = ant_eff
-        self.coupling_loss = coupling_loss  # perda do feeder
-        self.polarization_loss = polarization_loss  # perda de polarizacao (3dB de linear para circular ou vice e versa)
+        self.coupling_loss = coupling_loss  # feeder loss
+        self.polarization_loss = polarization_loss  # polarization loss (3dB from linear to circular or vice versa)
         self.lnb_gain = lnb_gain
         self.lnb_noise_temp = lnb_noise_temp
         self.cable_loss = cable_loss
         self.max_depoint = max_depoint  # maximum depointing angle between transmission and reception
 
-        # vairáveis para armazenar os parâmetros calculados internamente na classe
+        # variables to store parameters calculated internally in the class
         self.gain = None
         self.t_ground = None
         self.t_sky = None
@@ -89,7 +87,7 @@ class Reception:
         self.angle_3db = None  # 3 db or half-power angle
         self.a_dep = None
 
-        # parâmetros de outras classes e não setados ou calculados em na classe Reception
+        # parameters from other classes not set or calculated in the Reception class
         self.freq = None
         self.e = None
         self.a_rain = None
