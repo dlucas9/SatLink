@@ -97,7 +97,7 @@ class Satellite:
             sys.exit(
                 'Need to associate a ground station to a satellite first. Try satellite.set_reception(reception)!!!')
 
-        e = np.radians(self.get_elevation())
+        e = np.radians(self.get_elevation())        
         earth_rad = self.grstation.get_earth_radius()
         dist = np.sqrt(((earth_rad + self.h_sat) ** 2) - ((earth_rad * np.cos(e)) ** 2)) - earth_rad * np.sin(e)
         return dist
@@ -108,11 +108,16 @@ class Satellite:
                 'You need to create a satellite class with a technology, modulation and FEC to use this function!!!')
         elif self.snr_threshold is not None:
             return self.snr_threshold
-
+        
         path = 'models/Modulation_dB.csv'
         data = pd.read_csv(path, sep=';')
         # line = data.loc[(data.Tech == self.tech) & (data.Modulation == self.modulation) & (data.FEC == self.fec)]
         line = data.loc[(data.Modulation == self.modulation) & (data.FEC == self.fec)]
+        if line.empty:
+            print(f"DEBUG: No match found for modulation='{self.modulation}', fec='{self.fec}'")
+            print(f"DEBUG: Available modulations: {data['Modulation'].unique()}")
+            print(f"DEBUG: Available FECs: {data['FEC'].unique()}")
+            raise ValueError(f"No modulation/FEC combination found for {self.modulation} {self.fec}")
         self.snr_threshold = line['C_over_N'].values[0]
         return self.snr_threshold
 

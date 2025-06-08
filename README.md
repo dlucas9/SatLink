@@ -7,12 +7,20 @@ SatLink is a python based application that runs specific satellite downlink calc
   - Atmospheric attenuation calculation (via [itur])
   - Single and multi-point downlink availability calculation (input and output csv file)
   - Antenna size estimation for a desired availability (single point analysis and multi point csv output)
+  - **REST API for programmatic access to all calculation functions**
   - Save and load parameters for satellites, ground stations and reception characteristics
   - Totally free !!!
 
 This project is an attempt to simplify satellite's link budget calculations and to create a tool for teaching purposes. Please check the [**documentation**](https://cfragoas.github.io/SatLink/) for more detailed information.
 
-A Satlink web app implementation can be used by building a dockerfile using [**this**](https://github.com/cfragoas/SatLink/blob/main/Dockerfile) and running **satlink_web.py** (needs to install [**streamlit**](https://streamlit.io/) package to work)
+## Usage Options
+
+SatLink can be used in multiple ways:
+
+1. **Command Line**: Direct Python script execution using the example files
+2. **REST API**: HTTP API server for integration with other applications (see [API_USAGE.md](API_USAGE.md))
+3. **Web App**: Streamlit-based web interface using **satlink_web.py** (requires [streamlit](https://streamlit.io/))
+4. **Docker**: Containerized deployment using the provided [Dockerfile](Dockerfile)
 
 # Using SatLink via python commands 
  SatLink consists of three main classes 
@@ -49,6 +57,37 @@ print(ant_noise_rain)  # Kelvin
 ```
 
 The other functions are detailed in the [**documentation**](https://cfragoas.github.io/SatLink/).
+
+# Using SatLink REST API
+
+SatLink provides a comprehensive REST API for integration with other applications. Start the API server:
+
+```bash
+python satlink_api.py
+```
+
+The API will be available at `http://localhost:5000` and provides four main endpoints:
+
+- `POST /api/single-point` - Single point link budget calculation
+- `POST /api/multi-point` - Multi-point availability calculation  
+- `POST /api/single-point-antenna-size` - Single point antenna sizing analysis
+- `POST /api/multi-point-antenna-size` - Multi-point antenna sizing analysis
+
+For detailed API usage examples and parameter descriptions, see [API_USAGE.md](API_USAGE.md).
+
+**For Frontend Developers**: See the comprehensive [Frontend API Manual](FRONTEND_API_MANUAL.md) for detailed integration guidelines, form templates, error handling, and complete JavaScript examples.
+
+Example API call:
+```bash
+curl -X POST http://localhost:5000/api/single-point \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sat_long": -70, "freq": 12, "eirp": 54,
+    "b_transponder": 36, "b_util": 9,
+    "mod": "8PSK", "fec": "120/180",
+    "site_lat": -3.7, "site_long": -45.9
+  }'
+```
 
 ### Libraries
 

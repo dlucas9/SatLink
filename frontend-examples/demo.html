@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatLink API Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            color: #007bff;
+            font-style: italic;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .metric-value {
+            color: #333;
+        }
+        
+        .good { color: #28a745; }
+        .warning { color: #ffc107; }
+        .danger { color: #dc3545; }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab.active {
+            border-bottom-color: #007bff;
+            color: #007bff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛰️ SatLink API Demo</h1>
+        <p>Interactive demonstration of the SatLink satellite link budget calculation API.</p>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="single-point">Single Point</div>
+            <div class="tab" data-tab="multi-point">Multi-Point</div>
+            <div class="tab" data-tab="antenna-sizing">Antenna Sizing</div>
+        </div>
+
+        <!-- Single Point Tab -->
+        <div id="single-point" class="tab-content active">
+            <h2>Single Point Link Budget</h2>
+            <form id="single-point-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sat_long">Satellite Longitude (°):</label>
+                        <input type="number" id="sat_long" value="-70" step="0.1" min="-180" max="180" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="freq">Frequency (GHz):</label>
+                        <input type="number" id="freq" value="12" step="0.1" min="1" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eirp">EIRP (dBW):</label>
+                        <input type="number" id="eirp" value="54" step="0.1" min="0" max="100" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="b_transponder">Transponder BW (MHz):</label>
+                        <input type="number" id="b_transponder" value="36" step="0.1" min="0.1" max="1000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="b_util">Utilized BW (MHz):</label>
+                        <input type="number" id="b_util" value="9" step="0.1" min="0.1" max="1000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mod">Modulation:</label>
+                        <select id="mod" required>
+                            <option value="QPSK">QPSK</option>
+                            <option value="8PSK" selected>8PSK</option>
+                            <option value="16APSK">16APSK</option>
+                            <option value="32APSK">32APSK</option>
+                            <option value="64APSK">64APSK</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fec">FEC:</label>
+                        <select id="fec" required>
+                            <option value="90/180">90/180</option>
+                            <option value="96/180">96/180</option>
+                            <option value="100/180">100/180</option>
+                            <option value="104/180">104/180</option>
+                            <option value="116/180">116/180</option>
+                            <option value="120/180" selected>120/180</option>
+                            <option value="124/180">124/180</option>
+                            <option value="128/180">128/180</option>
+                            <option value="132/180">132/180</option>
+                            <option value="140/180">140/180</option>
+                            <option value="154/180">154/180</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="site_lat">Site Latitude (°):</label>
+                        <input type="number" id="site_lat" value="-3.7" step="0.01" min="-90" max="90" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="site_long">Site Longitude (°):</label>
+                        <input type="number" id="site_long" value="-45.9" step="0.01" min="-180" max="180" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ant_size">Antenna Size (m):</label>
+                        <input type="number" id="ant_size" value="1.2" step="0.1" min="0.1" max="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ant_eff">Antenna Efficiency (%):</label>
+                        <input type="number" id="ant_eff" value="65" step="1" min="0" max="100">
+                    </div>
+                </div>
+                
+                <button type="submit">Calculate Link Budget</button>
+                <div class="loading" id="single-loading">Calculating...</div>
+            </form>
+            
+            <div class="error" id="single-error"></div>
+            <div class="results" id="single-results"></div>
+        </div>
+
+        <!-- Multi-Point Tab -->
+        <div id="multi-point" class="tab-content">
+            <h2>Multi-Point Availability Analysis</h2>
+            <p>Use the same satellite parameters as Single Point, but specify multiple locations.</p>
+            
+            <div id="locations-container">
+                <h3>Locations</h3>
+                <div class="location-entry">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Location Name:</label>
+                            <input type="text" class="location-name" value="São Paulo">
+                        </div>
+                        <div class="form-group">
+                            <label>Latitude (°):</label>
+                            <input type="number" class="location-lat" value="-23.55" step="0.01" min="-90" max="90">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude (°):</label>
+                            <input type="number" class="location-long" value="-46.64" step="0.01" min="-180" max="180">
+                        </div>
+                    </div>
+                </div>
+                <div class="location-entry">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Location Name:</label>
+                            <input type="text" class="location-name" value="Rio de Janeiro">
+                        </div>
+                        <div class="form-group">
+                            <label>Latitude (°):</label>
+                            <input type="number" class="location-lat" value="-22.91" step="0.01" min="-90" max="90">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude (°):</label>
+                            <input type="number" class="location-long" value="-43.17" step="0.01" min="-180" max="180">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button data-action="addLocation">Add Location</button>
+            <button data-action="calculateMultiPoint">Calculate Multi-Point</button>
+            <div class="loading" id="multi-loading">Calculating...</div>
+            
+            <div class="error" id="multi-error"></div>
+            <div class="results" id="multi-results"></div>
+        </div>
+
+        <!-- Antenna Sizing Tab -->
+        <div id="antenna-sizing" class="tab-content">
+            <h2>Antenna Sizing Analysis</h2>
+            <p>Analyze performance across different antenna sizes for the Single Point parameters.</p>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ant_min">Min Antenna Size (m):</label>
+                    <input type="number" id="ant_min" value="0.6" step="0.1" min="0.1" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="ant_max">Max Antenna Size (m):</label>
+                    <input type="number" id="ant_max" value="2.4" step="0.1" min="0.1" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="ant_step">Step Size (m):</label>
+                    <input type="number" id="ant_step" value="0.2" step="0.1" min="0.1" max="1">
+                </div>
+            </div>
+            
+            <button data-action="calculateAntennaSizing">Analyze Antenna Sizes</button>
+            <div class="loading" id="antenna-loading">Calculating...</div>
+            
+            <div class="error" id="antenna-error"></div>
+            <div class="results" id="antenna-results"></div>
+        </div>
+    </div>
+
+    <script src="satlink-api-client.js"></script>
+    <script>
+        // Initialize API client
+        let api;
+        
+        // Wait for the page to load before initializing
+        // Valid modulation/FEC combinations from Modulation_dB.csv
+        const validCombinations = {
+            'QPSK': ['150/180', '144/180', '135/180', '126/180', '120/180', '114/180', '108/180', '100/180', '90/180', '80/180', '72/180', '60/180', '45/180'],
+            '8PSK': ['144/180', '135/180', '126/180', '120/180', '114/180', '108/180', '100/180'],
+            '16APSK': ['162/180', '160/180', '150/180', '144/180', '135/180', '126/180', '120/180', '114/180', '108/180', '100/180'],
+            '32APSK': ['162/180', '150/180', '144/180', '135/180', '126/180'],
+            '64APSK': ['162/180', '160/180', '150/180', '144/180', '135/180', '126/180', '114/180']
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                api = new SatLinkAPI();
+                console.log('SatLink API client initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize SatLink API client:', error);
+                // Show error message to user
+                document.querySelectorAll('.error').forEach(errorDiv => {
+                    errorDiv.innerHTML = 'Failed to initialize API client. Please ensure satlink-api-client.js is loaded properly.';
+                    errorDiv.style.display = 'block';
+                });
+            }
+            
+            // Setup modulation change listener for dynamic FEC validation
+            document.getElementById('mod').addEventListener('change', function() {
+                updateFecOptions(this.value);
+            });
+            
+            // Initialize FEC options based on default modulation
+            updateFecOptions(document.getElementById('mod').value);
+            
+            // Setup tab click event listeners
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    showTab(tabName, this);
+                });
+            });
+            
+            // Setup form event listener
+            document.getElementById('single-point-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!api) {
+                    showError('single-error', 'API client not initialized. Please refresh the page.');
+                    return;
+                }
+                
+                const params = {
+                    sat_long: parseFloat(document.getElementById('sat_long').value),
+                    freq: parseFloat(document.getElementById('freq').value),
+                    eirp: parseFloat(document.getElementById('eirp').value),
+                    b_transponder: parseFloat(document.getElementById('b_transponder').value),
+                    b_util: parseFloat(document.getElementById('b_util').value),
+                    mod: document.getElementById('mod').value,
+                    fec: document.getElementById('fec').value,
+                    site_lat: parseFloat(document.getElementById('site_lat').value),
+                    site_long: parseFloat(document.getElementById('site_long').value),
+                    ant_size: parseFloat(document.getElementById('ant_size').value),
+                    ant_eff: parseFloat(document.getElementById('ant_eff').value) || 65
+                };
+                
+                const errors = validateSinglePointParams(params);
+                if (errors.length > 0) {
+                    showError('single-error', errors.join('<br>'));
+                    return;
+                }
+                
+                showLoading('single-loading', true);
+                hideError('single-error');
+                
+                try {
+                    const result = await api.calculateSinglePoint(params);
+                    displaySinglePointResults(result);
+                } catch (error) {
+                    showError('single-error', error.message);
+                } finally {
+                    showLoading('single-loading', false);
+                }
+            });
+            
+            // Setup button event listeners
+            document.querySelectorAll('button[data-action]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    if (action === 'addLocation') {
+                        addLocation();
+                    } else if (action === 'calculateMultiPoint') {
+                        calculateMultiPoint();
+                    } else if (action === 'calculateAntennaSizing') {
+                        calculateAntennaSizing();
+                    }
+                });
+            });
+        });
+
+        function updateFecOptions(selectedModulation) {
+            const fecSelect = document.getElementById('fec');
+            const currentValue = fecSelect.value;
+            const validFecCodes = validCombinations[selectedModulation] || [];
+            
+            // Clear current options
+            fecSelect.innerHTML = '';
+            
+            // Add valid options for selected modulation
+            validFecCodes.forEach(fecCode => {
+                const option = document.createElement('option');
+                option.value = fecCode;
+                option.textContent = fecCode;
+                fecSelect.appendChild(option);
+            });
+            
+            // Try to maintain current selection if it's valid for the new modulation
+            if (validFecCodes.includes(currentValue)) {
+                fecSelect.value = currentValue;
+            } else if (validFecCodes.length > 0) {
+                // Otherwise, select the first valid option or a reasonable default
+                if (validFecCodes.includes('120/180')) {
+                    fecSelect.value = '120/180';
+                } else {
+                    fecSelect.value = validFecCodes[Math.floor(validFecCodes.length / 2)]; // Select middle option
+                }
+            }
+        }
+
+        function validateSinglePointParams(params) {
+            const errors = [];
+            
+            // Validate modulation/FEC combination
+            const validFecCodes = validCombinations[params.mod] || [];
+            if (!validFecCodes.includes(params.fec)) {
+                errors.push(`Invalid FEC code '${params.fec}' for modulation '${params.mod}'. Valid options: ${validFecCodes.join(', ')}`);
+            }
+            
+            // Validate numeric ranges
+            if (params.sat_long < -180 || params.sat_long > 180) {
+                errors.push('Satellite longitude must be between -180 and 180 degrees');
+            }
+            if (params.freq < 1 || params.freq > 100) {
+                errors.push('Frequency must be between 1 and 100 GHz');
+            }
+            if (params.site_lat < -90 || params.site_lat > 90) {
+                errors.push('Site latitude must be between -90 and 90 degrees');
+            }
+            if (params.site_long < -180 || params.site_long > 180) {
+                errors.push('Site longitude must be between -180 and 180 degrees');
+            }
+            if (params.ant_size < 0.1 || params.ant_size > 10) {
+                errors.push('Antenna size must be between 0.1 and 10 meters');
+            }
+            if (params.ant_eff < 0 || params.ant_eff > 100) {
+                errors.push('Antenna efficiency must be between 0 and 100%');
+            }
+            
+            return errors;
+        }
+
+        function formatResults(results) {
+            const formatNumber = (value, unit = '', decimals = 2) => {
+                if (value === null || value === undefined || isNaN(value)) return 'N/A';
+                return `${value.toFixed(decimals)}${unit}`;
+            };
+
+            return {
+                availability: formatNumber(results.availability?.percentage, '%'),
+                snr_clear: formatNumber(results.link_budget?.snr_clear_sky_db, ' dB'),
+                snr_attenuated: formatNumber(results.link_budget?.snr_with_attenuation_db, ' dB'),
+                link_margin: formatNumber(results.link_budget?.link_margin_db, ' dB'),
+                elevation: formatNumber(results.geometry?.elevation_deg, '°'),
+                rain_attenuation: formatNumber(results.atmospheric?.rain_attenuation_db, ' dB'),
+                total_attenuation: formatNumber(results.atmospheric?.total_attenuation_db, ' dB')
+            };
+        }
+        
+        function showTab(tabName, clickedTab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            clickedTab.classList.add('active');
+        }
+        
+        function displaySinglePointResults(results) {
+            const formatted = formatResults(results);
+            const availabilityValue = results.availability?.percentage || 0;
+            const linkMarginValue = results.link_budget?.link_margin_db || 0;
+            
+            const html = `
+                <h3>Link Budget Results</h3>
+                <div class="metric">
+                    <span class="metric-label">Availability:</span>
+                    <span class="metric-value ${availabilityValue > 99 ? 'good' : 'warning'}">${formatted.availability}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">SNR (Clear Sky):</span>
+                    <span class="metric-value">${formatted.snr_clear}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">SNR (With Attenuation):</span>
+                    <span class="metric-value">${formatted.snr_attenuated}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Link Margin:</span>
+                    <span class="metric-value ${linkMarginValue > 3 ? 'good' : linkMarginValue > 1 ? 'warning' : 'danger'}">${formatted.link_margin}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Elevation Angle:</span>
+                    <span class="metric-value">${formatted.elevation}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Rain Attenuation:</span>
+                    <span class="metric-value">${formatted.rain_attenuation}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Attenuation:</span>
+                    <span class="metric-value">${formatted.total_attenuation}</span>
+                </div>
+            `;
+            
+            document.getElementById('single-results').innerHTML = html;
+            document.getElementById('single-results').style.display = 'block';
+        }
+        
+        function addLocation() {
+            const container = document.getElementById('locations-container');
+            const newLocation = document.createElement('div');
+            newLocation.className = 'location-entry';
+            newLocation.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Location Name:</label>
+                        <input type="text" class="location-name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Latitude (°):</label>
+                        <input type="number" class="location-lat" value="" step="0.01" min="-90" max="90">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude (°):</label>
+                        <input type="number" class="location-long" value="" step="0.01" min="-180" max="180">
+                    </div>
+                </div>
+            `;
+            container.appendChild(newLocation);
+        }
+        
+        async function calculateMultiPoint() {
+            if (!api) {
+                showError('multi-error', 'API client not initialized. Please refresh the page.');
+                return;
+            }
+            
+            const locations = [];
+            document.querySelectorAll('.location-entry').forEach(entry => {
+                const name = entry.querySelector('.location-name').value;
+                const lat = parseFloat(entry.querySelector('.location-lat').value);
+                const long = parseFloat(entry.querySelector('.location-long').value);
+                
+                if (name && !isNaN(lat) && !isNaN(long)) {
+                    locations.push({ name, lat, long });
+                }
+            });
+            
+            if (locations.length === 0) {
+                showError('multi-error', 'Please add at least one valid location');
+                return;
+            }
+            
+            const params = {
+                sat_long: parseFloat(document.getElementById('sat_long').value),
+                freq: parseFloat(document.getElementById('freq').value),
+                eirp: parseFloat(document.getElementById('eirp').value),
+                b_transponder: parseFloat(document.getElementById('b_transponder').value),
+                b_util: parseFloat(document.getElementById('b_util').value),
+                mod: document.getElementById('mod').value,
+                fec: document.getElementById('fec').value,
+                points: locations
+            };
+            
+            showLoading('multi-loading', true);
+            hideError('multi-error');
+            
+            try {
+                const result = await api.calculateMultiPoint(params);
+                displayMultiPointResults(result.results);
+            } catch (error) {
+                showError('multi-error', error.message);
+            } finally {
+                showLoading('multi-loading', false);
+            }
+        }
+        
+        function displayMultiPointResults(results) {
+            let html = '<h3>Multi-Point Results</h3>';
+            
+            results.forEach(location => {
+                const formatted = formatResults(location);
+                const availabilityValue = location.availability?.percentage || 0;
+                const linkMarginValue = location.link_budget?.link_margin_db || 0;
+                
+                html += `
+                    <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                        <h4>${location.location?.name || 'Unknown Location'}</h4>
+                        <div class="metric">
+                            <span class="metric-label">Availability:</span>
+                            <span class="metric-value ${availabilityValue > 99 ? 'good' : 'warning'}">${formatted.availability}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Link Margin:</span>
+                            <span class="metric-value ${linkMarginValue > 3 ? 'good' : linkMarginValue > 1 ? 'warning' : 'danger'}">${formatted.link_margin}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Elevation:</span>
+                            <span class="metric-value">${formatted.elevation}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('multi-results').innerHTML = html;
+            document.getElementById('multi-results').style.display = 'block';
+        }
+        
+        async function calculateAntennaSizing() {
+            if (!api) {
+                showError('antenna-error', 'API client not initialized. Please refresh the page.');
+                return;
+            }
+            
+            const params = {
+                sat_long: parseFloat(document.getElementById('sat_long').value),
+                freq: parseFloat(document.getElementById('freq').value),
+                eirp: parseFloat(document.getElementById('eirp').value),
+                b_transponder: parseFloat(document.getElementById('b_transponder').value),
+                b_util: parseFloat(document.getElementById('b_util').value),
+                mod: document.getElementById('mod').value,
+                fec: document.getElementById('fec').value,
+                site_lat: parseFloat(document.getElementById('site_lat').value),
+                site_long: parseFloat(document.getElementById('site_long').value),
+                ant_size_min: parseFloat(document.getElementById('ant_min').value),
+                ant_size_max: parseFloat(document.getElementById('ant_max').value),
+                ant_size_step: parseFloat(document.getElementById('ant_step').value)
+            };
+            
+            showLoading('antenna-loading', true);
+            hideError('antenna-error');
+            
+            try {
+                const result = await api.calculateSinglePointAntennaSize(params);
+                displayAntennaSizingResults(result.results);
+            } catch (error) {
+                showError('antenna-error', error.message);
+            } finally {
+                showLoading('antenna-loading', false);
+            }
+        }
+        
+        function displayAntennaSizingResults(results) {
+            let html = '<h3>Antenna Sizing Analysis</h3>';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<tr style="background-color: #f8f9fa;"><th style="padding: 10px; border: 1px solid #ddd;">Antenna Size</th><th style="padding: 10px; border: 1px solid #ddd;">Availability</th><th style="padding: 10px; border: 1px solid #ddd;">Link Margin</th><th style="padding: 10px; border: 1px solid #ddd;">SNR</th></tr>';
+            
+            results.forEach(item => {
+                const availability = item.availability?.percentage?.toFixed(2) || 'N/A';
+                const margin = item.link_budget?.link_margin_db?.toFixed(2) || 'N/A';
+                const snr = item.link_budget?.snr_with_attenuation_db?.toFixed(2) || 'N/A';
+                
+                html += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${item.antenna_size_m}m</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(availability) > 99 ? '#28a745' : '#ffc107'};">${availability}%</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(margin) > 3 ? '#28a745' : parseFloat(margin) > 1 ? '#ffc107' : '#dc3545'};">${margin} dB</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${snr} dB</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            
+            document.getElementById('antenna-results').innerHTML = html;
+            document.getElementById('antenna-results').style.display = 'block';
+        }
+        
+        function showLoading(elementId, show) {
+            document.getElementById(elementId).style.display = show ? 'block' : 'none';
+        }
+        
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.innerHTML = message;
+            errorElement.style.display = 'block';
+        }
+        
+        function hideError(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+    </script>
+</body>
+</html>
